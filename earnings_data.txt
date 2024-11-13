@@ -53,7 +53,7 @@ Tuesday, November 19, 2024
 	Tokio Marine Holdings Inc(TKOMY)	--	/  --	--	/  --	73.69B		
 	MS&AD Insurance Group Holdings PK(MSADY)	--	/  --	--	/  --	35.59B		
 	Keysight Technologies(KEYS)	--	/  1.57	--	/  1.26B	27.29B		
-	Imperial Brands(IMBBY)	--	/  2.27	--	/  6,652M	24.81B		
+	Imperial Brands(IMBBY)	--	/  2.27	--	/  6,652M	24.80B		
 	Sonova Holding AG(SONVY)	--	/  --	--	/  --	21.34B		
 	Prudential Public ADR(PUK)	--	/  --	--	/  --	20.66B		
 	Viking Holdings(VIK)	--	/  0.82	--	/  --	19.79B		

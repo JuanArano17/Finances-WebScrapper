@@ -1,25 +1,23 @@
 import pandas as pd
 import re
 import streamlit as st
+from scraper import scrape_earnings_data  # Import the scraping function
 
 def process_data(input_file):
-    # Read data from input file
     with open(input_file, 'r') as file:
-        lines = file.readlines()
-        
-    # Initialize empty list for structured data
+        lines = file.readlines()[1:]  # Skip the first line
+
     data = []
+    pattern = re.compile(r"(.+?)\s+(\S+)\s*/\s+(\S+)\s+(\S+)\s*/\s+(\S+)\s+(\S+)")
 
     for line in lines:
-        # Extract the required fields using regex
-        match = re.match(r"(.+?)\s+(\S+)\s+/\s+(\S+)\s+(\S+)\s+/\s+(\S+)\s+(\S+)", line.strip())
+        match = pattern.match(line.strip())
         if match:
             company = match.group(1).strip()
             eps_forecast = match.group(2) + " / " + match.group(3)
             revenue_forecast = match.group(4) + " / " + match.group(5)
             market_cap = match.group(6)
 
-            # Convert market cap to numerical value for filtering
             if 'T' in market_cap:
                 cap_value = float(market_cap.replace('T', '')) * 1e12
             elif 'B' in market_cap:
@@ -31,7 +29,6 @@ def process_data(input_file):
             else:
                 cap_value = float(market_cap)
 
-            # Filter based on market cap
             if cap_value >= 10e6:  # Only keep entries with cap >= 10M
                 data.append({
                     "Company": company,
@@ -40,16 +37,19 @@ def process_data(input_file):
                     "MARKET CAP": market_cap
                 })
 
-    # Convert to DataFrame
     df = pd.DataFrame(data)
     return df
 
-# Load and process data
+# Streamlit App
+st.title("Interactive Financial Data Table")
+
+# Display a loading animation while scraping
+with st.spinner("Scraping data, please wait..."):
+    scrape_earnings_data()  # Call the scraper function to get the latest data
+
+# Process the scraped data
 input_file = 'earnings_data.txt'
 df = process_data(input_file)
 
-# Set up Streamlit app
-st.title("Interactive Financial Data Table")
-
-# Display the dataframe with pagination, filtering, and sorting
+# Display the dataframe
 st.dataframe(df, use_container_width=True)
