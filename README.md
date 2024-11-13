@@ -2,6 +2,10 @@
 
 This project is a web scraper and data analysis tool designed to collect earnings report data from [Investing.com](https://www.investing.com/earnings-calendar/) and present it in an interactive format using Streamlit. The tool gathers EPS, revenue, and market cap information for companies, allowing users to analyze potential earnings outcomes and gain financial insights.
 
+## Purpose
+
+The purpose of this project is to provide investors and financial analysts with streamlined access to quarterly earnings report data from publicly traded companies. By gathering and structuring important financial information in real-time, this project allows users to monitor key events, such as quarterly earnings announcements, to inform investment decisions. Understanding these events can help anticipate market reactions and gain insights into company performance and sector trends, ultimately aiding in data-driven decision-making in the stock market.
+
 ## Features
 
 - **Web Scraping**: Automatically collects company earnings data, including EPS, revenue forecasts, and market capitalization.
