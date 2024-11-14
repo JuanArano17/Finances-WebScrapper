@@ -1,55 +1,36 @@
-import pandas as pd
-import re
 import streamlit as st
-from scraper import scrape_earnings_data  # Import the scraping function
+from tools.scrapers.scraper import scrape_earnings_data
+from tools.data.data_cleaner import clean_data
+from tools.data.data_analyzer import filter_relevant_stocks, generate_insights
+from tools.data.data_saver import save_to_csv
 
-def process_data(input_file):
-    with open(input_file, 'r') as file:
-        lines = file.readlines()[1:]  # Skip the first line
 
-    data = []
-    pattern = re.compile(r"(.+?)\s+(\S+)\s*/\s+(\S+)\s+(\S+)\s*/\s+(\S+)\s+(\S+)")
+st.set_page_config(layout="wide")
+st.title("Interactive Financial Data Table and Insights")
 
-    for line in lines:
-        match = pattern.match(line.strip())
-        if match:
-            company = match.group(1).strip()
-            eps_forecast = match.group(2) + " / " + match.group(3)
-            revenue_forecast = match.group(4) + " / " + match.group(5)
-            market_cap = match.group(6)
+with st.spinner("Scraping data, please wait a few seconds...(12 aprox)"):
+    scrape_earnings_data('txt/raw_earnings_data.txt')
+df = clean_data('txt/raw_earnings_data.txt')
 
-            if 'T' in market_cap:
-                cap_value = float(market_cap.replace('T', '')) * 1e12
-            elif 'B' in market_cap:
-                cap_value = float(market_cap.replace('B', '')) * 1e9
-            elif 'M' in market_cap:
-                cap_value = float(market_cap.replace('M', '')) * 1e6
-            elif 'K' in market_cap:
-                cap_value = float(market_cap.replace('K', '')) * 1e3
-            else:
-                cap_value = float(market_cap)
+relevant_df = filter_relevant_stocks(df)
+insights = generate_insights(relevant_df)
 
-            if cap_value >= 10e6:  # Only keep entries with cap >= 10M
-                data.append({
-                    "Company": company,
-                    "EPS/FORECAST": eps_forecast,
-                    "REVENUE/FORECAST": revenue_forecast,
-                    "MARKET CAP": market_cap
-                })
+save_to_csv(relevant_df, 'csv/filtered_earnings_data.csv')
 
-    df = pd.DataFrame(data)
-    return df
+tab1, tab2 = st.tabs(["Full Data", "Filtered Data with Insights"])
 
-# Streamlit App
-st.title("Interactive Financial Data Table")
+with tab1:
+    st.subheader("Full Financial Data Table")
+    st.dataframe(df, use_container_width=True)  # Ensures the dataframe uses maximum container width
 
-# Display a loading animation while scraping
-with st.spinner("Scraping data, please wait..."):
-    scrape_earnings_data()  # Call the scraper function to get the latest data
-
-# Process the scraped data
-input_file = 'earnings_data.txt'
-df = process_data(input_file)
-
-# Display the dataframe
-st.dataframe(df, use_container_width=True)
+with tab2:
+    st.subheader("Filtered Financial Data Table")
+    st.dataframe(relevant_df, use_container_width=True)  # Ensures the dataframe uses maximum container width
+    st.write("""
+    **Reasons for Filtering:**
+    - Stocks with a market cap below the threshold of 1 billion are excluded.
+    - Stocks with no meaningful EPS or revenue data (both forecast and actual missing) are excluded.
+    """)
+    st.subheader("Insights")
+    for key, value in insights.items():
+        st.write(f"{key}: {value}")
