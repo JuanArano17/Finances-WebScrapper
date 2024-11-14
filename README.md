@@ -1,3 +1,4 @@
+
 # Earnings Report Scraper and Analyzer
 
 This project is a web scraper and data analysis tool designed to collect earnings report data from [Investing.com](https://www.investing.com/earnings-calendar/) and present it in an interactive format using Streamlit. The tool gathers EPS, revenue, and market cap information for companies, allowing users to analyze potential earnings outcomes and gain financial insights.
@@ -9,9 +10,13 @@ The purpose of this project is to provide investors and financial analysts with 
 ## Features
 
 - **Web Scraping**: Automatically collects company earnings data, including EPS, revenue forecasts, and market capitalization.
-- **Data Filtering and Sorting**: Filters data to include only companies with a market cap of $10 million or higher.
-- **Interactive Data Visualization**: Displays the data in a Streamlit app, allowing users to filter, sort, and analyze earnings information in an easy-to-use interface.
-- **Loading Animation**: Indicates the progress of data scraping to enhance user experience.
+- **Data Cleaning**: Cleans the scraped data by converting values with suffixes (K, M, B, T) into full float values and handling missing data appropriately.
+- **Data Filtering and Sorting**: Filters data to include only companies with a significant market cap threshold (default is $1 billion) and relevant EPS or revenue data, with sorting by market cap in descending order.
+- **Interactive Data Visualization**: Displays the data in a Streamlit app with two tabs:
+  - **Full Data**: Shows the complete scraped and cleaned data.
+  - **Filtered Data with Insights**: Presents filtered data with calculated insights, such as average market cap and average revenue forecast.
+- **Loading Animation**: Provides a loading animation in the Streamlit interface while the data is being scraped.
+- **Enhanced Layout**: Optimized display to utilize more screen space for better data visualization.
 
 ## Requirements
 
@@ -34,7 +39,7 @@ The purpose of this project is to provide investors and financial analysts with 
    pip install -r requirements.txt
    ```
 
-   Ensure you have the necessary drivers installed for Selenium. This project is configured to use Safari, so make sure you have [Safari WebDriver](https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari) installed.
+   Ensure you have the necessary drivers installed for Selenium. This project is configured to use Chrome in headless mode, so make sure you have [ChromeDriver](https://sites.google.com/chromium.org/driver/) installed.
 
 ## Usage
 
@@ -46,44 +51,59 @@ The purpose of this project is to provide investors and financial analysts with 
    This command will open the Streamlit app in your default web browser.
 
 2. **How It Works**:
-   - The `main.py` file handles both the scraping and the Streamlit interface.
-   - When the application starts, it will display a loading animation while the scraper gathers data.
-   - Once the data is collected, it will be displayed as an interactive table in the Streamlit app.
+   - The `main.py` file initiates scraping, cleaning, filtering, and displaying the data through Streamlit.
+   - On startup, the app shows a loading animation while the scraper gathers data.
+   - The data is cleaned, filtered by market cap and relevance, and then displayed in an interactive table.
 
 ## Project Structure
 
 ```plaintext
-├── earnings_data.txt            # Generated file with scraped earnings data
-├── main.py                       # Main script to run the scraper and Streamlit app
-├── InputScrapper.py              # Web scraping script for gathering earnings data
-├── requirements.txt              # List of Python packages required
-└── README.md                     # Project documentation
+├── txt/
+│   ├── raw_earnings_data.txt       # Raw data file after scraping
+├── csv/
+│   ├── filtered_earnings_data.csv   # CSV file of the cleaned and filtered data
+├── main.py                          # Main script for running the Streamlit app
+├── tools/
+│   ├── scrapers/
+│   │   └── scraper.py               # Web scraping logic
+│   ├── data/
+│   │   ├── data_cleaner.py          # Data cleaning and processing
+│   │   ├── data_analyzer.py         # Filtering and insights generation
+│   │   └── data_saver.py            # Saving filtered data to CSV
+├── static/
+│   └── style.css                    # Custom CSS for Streamlit UI enhancements
+├── requirements.txt                 # List of Python packages required
+└── README.md                        # Project documentation
 ```
 
 ## Configuration
 
-- Modify the target URL or adjust the CSS selectors in `srapper.py` if there are changes in the structure of [Investing.com](https://www.investing.com/earnings-calendar/).
-- The minimum market cap filter (10M) can be adjusted in the `process_data` function in `main.py`.
+- Modify the target URL or adjust the CSS selectors in `scraper.py` if there are changes in the structure of [Investing.com](https://www.investing.com/earnings-calendar/).
+- Customize the `market_cap_threshold` parameter in `data_analyzer.py` to set different filtering criteria based on market cap.
+- Adjust CSS styling in `style.css` to further customize the appearance of the Streamlit app.
 
 ## Example Data
 
 Sample data collected:
-| Company            | EPS/FORECAST | REVENUE/FORECAST | MARKET CAP |
-|--------------------|--------------|-------------------|------------|
-| NVIDIA (NVDA)      | 0.7435       | 32.97B           | 3.58T      |
-| Walmart (WMT)      | 0.53         | 167.61B          | 688.24B    |
-| American Eagle (AEO) | 0.47       | 1.31B            | 3.51B      |
+
+| ID | Company                  | EPS_FORECAST | EPS_ACTUAL | REVENUE_FORECAST | REVENUE_ACTUAL | MARKET_CAP   |
+|----|---------------------------|--------------|------------|-------------------|----------------|--------------|
+| 1  | NVIDIA (NVDA)            | None         | 0.7435     | None             | 32,970,000,000 | 3,580,000,000,000 |
+| 2  | Walmart (WMT)            | None         | 0.53       | None             | 167,610,000,000| 688,240,000,000 |
+| 3  | American Eagle (AEO)     | None         | 0.47       | None             | 1,310,000,000  | 3,510,000,000 |
+| ...| ...                       | ...          | ...        | ...              | ...            | ...          |
 
 ## Known Issues
 
-- If the webpage structure changes, the CSS selectors in `scrapper.py` may need to be updated.
-- Safari WebDriver must be properly configured, and pop-ups must be enabled in Safari Preferences.
+- If the webpage structure changes, the CSS selectors in `scraper.py` may need to be updated.
+- ChromeDriver must be properly configured for Selenium, and it may require updates depending on Chrome browser versions.
 
 ## Future Enhancements
 
 - Add sentiment analysis based on analyst recommendations or earnings call transcripts.
 - Expand data filtering and sorting options within the Streamlit app.
 - Integrate additional economic indicators for deeper insights.
+- Add further customization in the Streamlit UI to allow user-driven parameter adjustments.
 
 ## License
 
