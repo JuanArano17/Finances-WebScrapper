@@ -9,8 +9,10 @@ from tools.compound_interest_calculator import (
     find_breakeven_point_incremental,
     monthly_investing_compound_interest,
     incremental_monthly_investing,
+    calculate_required_monthly_investment,
+    calculate_time_to_goal,
     plot_interactive_chart,
-    plot_monthly_investments_and_gains 
+    plot_monthly_investments_and_gains
 )
 
 # Streamlit configuration
@@ -61,14 +63,17 @@ with tab1:
 with tab2:
     st.subheader("Compound Interest Calculator")
 
+    # Expanded options for compound interest calculations
     mode = st.selectbox(
-        "Select Mode", ["Basic", "Monthly Investing", "Incremental Monthly Investing"])
+        "Select Mode",
+        ["Basic", "Monthly Investing", "Incremental Monthly Investing", "Goal-Oriented"]
+    )
 
+    # Common inputs
     principal = st.number_input(
         "Initial Investment", min_value=0.0, step=100.0)
     annual_rate = st.number_input(
         "Annual Interest Rate (%)", min_value=0.0, step=0.1) / 100
-    years = st.number_input("Number of Years", min_value=1, step=1)
     capitalization_period = st.selectbox("Capitalization Frequency", [
                                          "Monthly", "Quarterly", "Semi-Annual", "Annual"])
     capitalization_map = {"Monthly": 12,
@@ -76,32 +81,44 @@ with tab2:
     capitalization_periods = capitalization_map[capitalization_period]
 
     if mode == "Basic":
+        years = st.number_input("Number of Years", min_value=1, step=1)
         if st.button("Calculate (Basic)"):
             final_amount, total_investment, relation, yearly_data = basic_compound_interest(
                 principal, annual_rate, years, capitalization_periods
             )
             st.write(f"Final Amount: ${final_amount:,.2f}")
-            st.write(f"Relation (Final Amount / Total Investment): {relation:.2f}")
+            st.write(
+                f"Relation (Final Amount / Total Investment): {relation:.2f}")
 
-            plot_interactive_chart(yearly_data, "Basic Compound Interest Over Time", final_amount)
+            plot_interactive_chart(
+                yearly_data, "Basic Compound Interest Over Time", final_amount)
 
     elif mode == "Monthly Investing":
-        monthly_investment = st.number_input("Monthly Investment Amount", min_value=0.0, step=10.0)
+        years = st.number_input("Number of Years", min_value=1, step=1)
+        monthly_investment = st.number_input(
+            "Monthly Investment Amount", min_value=0.0, step=10.0)
         if st.button("Calculate (Monthly Investing)"):
             final_amount, total_investment, relation, yearly_data = monthly_investing_compound_interest(
                 principal, annual_rate, years, capitalization_periods, monthly_investment
             )
             st.write(f"Final Amount: ${final_amount:,.2f}")
-            st.write(f"Total Investment (excluding initial): ${total_investment:,.2f}")
-            st.write(f"Relation (Final Amount / Total Investment): {relation:.2f}")
+            st.write(
+                f"Total Investment (excluding initial): ${total_investment - principal:,.2f}")
+            st.write(
+                f"Relation (Final Amount / Total Investment): {relation:.2f}")
 
-            plot_interactive_chart(yearly_data, "Monthly Investing Compound Interest Over Time", final_amount)
+            plot_interactive_chart(
+                yearly_data, "Monthly Investing Compound Interest Over Time", final_amount)
 
     elif mode == "Incremental Monthly Investing":
-        monthly_investment = st.number_input("Monthly Investment Amount", min_value=0.0, step=10.0)
-        increment = st.number_input("Incremental Amount", min_value=0.0, step=10.0)
-        increment_periods = st.number_input("Increment Period (Months)", min_value=1, step=1)
-        
+        years = st.number_input("Number of Years", min_value=1, step=1)
+        monthly_investment = st.number_input(
+            "Monthly Investment Amount", min_value=0.0, step=10.0)
+        increment = st.number_input(
+            "Incremental Amount", min_value=0.0, step=10.0)
+        increment_periods = st.number_input(
+            "Increment Period (Months)", min_value=1, step=1)
+
         if st.button("Calculate (Incremental)"):
             final_amount, total_investment, relation, yearly_data = incremental_monthly_investing(
                 principal, annual_rate, years, capitalization_periods, monthly_investment, increment, increment_periods
@@ -110,20 +127,50 @@ with tab2:
                 principal, annual_rate, years, capitalization_periods, monthly_investment, increment, increment_periods
             )
             st.write(f"Final Amount: ${final_amount:,.2f}")
-            st.write(f"Total Investment (excluding initial): ${total_investment:,.2f}")
-            st.write(f"Relation (Final Amount / Total Investment): {relation:.2f}")
+            st.write(
+                f"Total Investment (excluding initial): ${total_investment - principal:,.2f}")
+            st.write(
+                f"Relation (Final Amount / Total Investment): {relation:.2f}")
             if breakeven_month:
-                st.write(f"Breakeven Point: {breakeven_month} months (Year {breakeven_year})")
+                st.write(
+                    f"Breakeven Point: {breakeven_month} months (Year {breakeven_year})")
             else:
-                st.write("No breakeven point reached within the selected timeframe.")
-            
+                st.write(
+                    "No breakeven point reached within the selected timeframe.")
+
             # Plot the results
-            plot_interactive_chart(yearly_data, "Incremental Monthly Investing Compound Interest Over Time", final_amount)
+            plot_interactive_chart(
+                yearly_data, "Incremental Monthly Investing Compound Interest Over Time", final_amount)
             plot_monthly_investments_and_gains(
-                principal, 
-                annual_rate, 
-                years, 
-                monthly_investment, 
-                increment, 
+                principal,
+                annual_rate,
+                years,
+                monthly_investment,
+                increment,
                 increment_periods
             )
+
+    elif mode == "Goal-Oriented":
+        calculate_option = st.selectbox(
+            "Calculate Required", ["Monthly Investment", "Years Needed"])
+        target_amount = st.number_input(
+            "Desired Future Amount", min_value=0.0, step=1000.0)
+
+        if calculate_option == "Monthly Investment":
+            years = st.number_input("Number of Years", min_value=1, step=1)
+            if st.button("Calculate Required Monthly Investment"):
+                required_monthly_investment = calculate_required_monthly_investment(
+                    target_amount, principal, annual_rate, years, capitalization_periods
+                )
+                st.write(
+                    f"Required Monthly Investment: ${required_monthly_investment:,.2f}")
+
+        elif calculate_option == "Years Needed":
+            monthly_investment = st.number_input(
+                "Monthly Investment Amount", min_value=0.0, step=10.0)
+            if st.button("Calculate Time to Reach Goal"):
+                required_years = calculate_time_to_goal(
+                    target_amount, principal, annual_rate, monthly_investment, capitalization_periods
+                )
+                st.write(
+                    f"Time Needed to Reach Goal: {required_years:.2f} years")

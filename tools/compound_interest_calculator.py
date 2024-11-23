@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_total_index_holdings(yearly_data, title):
     """
@@ -9,8 +10,8 @@ def plot_total_index_holdings(yearly_data, title):
     """
     plt.figure(figsize=(10, 6))
     plt.plot(
-        yearly_data.index, 
-        yearly_data['Investment'], 
+        yearly_data.index,
+        yearly_data['Investment'],
         label='Total Index Holding (Accumulated + Gains)'
     )
     plt.title(title)
@@ -60,15 +61,15 @@ def plot_monthly_investments_and_gains(principal, annual_rate, years, monthly_in
     # Plot both monthly investments and gains
     plt.figure(figsize=(12, 6))
     plt.bar(
-        monthly_df["Month"], 
-        monthly_df["Monthly Investment"], 
-        color="blue", 
+        monthly_df["Month"],
+        monthly_df["Monthly Investment"],
+        color="blue",
         label="Monthly Investment"
     )
     plt.plot(
-        monthly_df["Month"], 
-        monthly_df["Monthly Index Gain"], 
-        color="orange", 
+        monthly_df["Month"],
+        monthly_df["Monthly Index Gain"],
+        color="orange",
         label="Monthly Index Gain",
         linewidth=2
     )
@@ -76,8 +77,8 @@ def plot_monthly_investments_and_gains(principal, annual_rate, years, monthly_in
     # Set x-axis labels
     plt.xticks(
         ticks=monthly_df["Month"][monthly_df["Month"] % 12 == 0],  # Yearly intervals
-        labels=monthly_df["Year (Months)"][monthly_df["Month"] % 12 == 0], 
-        rotation=45, 
+        labels=monthly_df["Year (Months)"][monthly_df["Month"] % 12 == 0],
+        rotation=45,
         ha='right'
     )
     plt.title("Monthly Investments and Index Gains Over Time")
@@ -98,18 +99,18 @@ def plot_monthly_investments_and_gains(principal, annual_rate, years, monthly_in
 
 def basic_compound_interest(principal, annual_rate, years, capitalization_periods):
     periods = years * capitalization_periods
-    total_investment = principal
+    rate_per_period = annual_rate / capitalization_periods
     investment = principal
+    total_investment = principal
     yearly_data = []
 
-    for period in range(periods):
-        if (period + 1) % (12 // capitalization_periods) == 0:
-            interest = investment * (annual_rate / capitalization_periods)
-            investment += interest
+    for period in range(1, periods + 1):
+        interest = investment * rate_per_period
+        investment += interest
 
-        if (period + 1) % 12 == 0:  # Log yearly data
+        if period % capitalization_periods == 0:  # Log yearly data
             yearly_data.append({
-                "Year": (period + 1) // 12,
+                "Year": period // capitalization_periods,
                 "Investment": investment,
                 "Accumulated Investment": total_investment,
                 "Interest Gains": investment - total_investment
@@ -120,24 +121,24 @@ def basic_compound_interest(principal, annual_rate, years, capitalization_period
     return investment, total_investment, relation, yearly_data_df
 
 def monthly_investing_compound_interest(principal, annual_rate, years, capitalization_periods, monthly_investment):
-    periods = years * capitalization_periods
+    total_months = years * 12
+    monthly_rate = (1 + annual_rate) ** (1 / 12) - 1
     investment = principal
     total_investment = principal
-    accumulated_investment = 0
+    accumulated_investment = principal
     yearly_data = []
 
-    for period in range(periods):
-        if (period + 1) % (12 // capitalization_periods) == 0:
-            interest = investment * (annual_rate / capitalization_periods)
-            investment += interest
-
+    for month in range(1, total_months + 1):
         investment += monthly_investment
         accumulated_investment += monthly_investment
         total_investment += monthly_investment
 
-        if (period + 1) % 12 == 0:  # Log yearly data
+        interest = investment * monthly_rate
+        investment += interest
+
+        if month % 12 == 0:  # Log yearly data
             yearly_data.append({
-                "Year": (period + 1) // 12,
+                "Year": month // 12,
                 "Investment": investment,
                 "Accumulated Investment": accumulated_investment,
                 "Interest Gains": investment - accumulated_investment
@@ -148,28 +149,28 @@ def monthly_investing_compound_interest(principal, annual_rate, years, capitaliz
     return investment, total_investment, relation, yearly_data_df
 
 def incremental_monthly_investing(principal, annual_rate, years, capitalization_periods, monthly_investment, increment, increment_periods):
-    periods = years * capitalization_periods
+    total_months = years * 12
     monthly_rate = (1 + annual_rate) ** (1 / 12) - 1
     investment = principal
     total_investment = principal
-    accumulated_investment = 0
+    accumulated_investment = principal
+    current_monthly_investment = monthly_investment
     yearly_data = []
 
-    for period in range(periods):
-        if (period + 1) % increment_periods == 0:
-            monthly_investment += increment
+    for month in range(1, total_months + 1):
+        investment += current_monthly_investment
+        accumulated_investment += current_monthly_investment
+        total_investment += current_monthly_investment
 
-        if (period + 1) % (12 // capitalization_periods) == 0:
-            interest = investment * (annual_rate / capitalization_periods)
-            investment += interest
+        interest = investment * monthly_rate
+        investment += interest
 
-        investment += monthly_investment
-        accumulated_investment += monthly_investment
-        total_investment += monthly_investment
+        if month % increment_periods == 0:
+            current_monthly_investment += increment
 
-        if (period + 1) % 12 == 0:  # Log yearly data
+        if month % 12 == 0:  # Log yearly data
             yearly_data.append({
-                "Year": (period + 1) // 12,
+                "Year": month // 12,
                 "Investment": investment,
                 "Accumulated Investment": accumulated_investment,
                 "Interest Gains": investment - accumulated_investment
@@ -230,7 +231,7 @@ def plot_interactive_chart(yearly_data, title, final_amount):
         arrowhead=1,
         ax=-40,
         ay=-40,
-        font=dict(color="green", size=12, weight="bold")
+        font=dict(color="green", size=12, family="Arial")
     )
 
     # Update layout for grid lines
@@ -243,13 +244,14 @@ def plot_interactive_chart(yearly_data, title, final_amount):
             gridwidth=0.5
         ),
         yaxis=dict(
-            title="Money",
+            title="Amount ($)",
             showgrid=True,
             gridcolor="lightgray",
             gridwidth=0.5,
             tickformat=".2s"  # Abbreviates numbers (e.g., 1M, 1K)
         ),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                    xanchor="right", x=1)
     )
 
     st.plotly_chart(fig)
@@ -259,31 +261,51 @@ def find_breakeven_point_incremental(principal, annual_rate, years, capitalizati
     Finds the breakeven point where the monthly index gain equals the monthly investment,
     accounting for incremental monthly investments.
     """
-    periods = years * 12
+    total_months = years * 12
     monthly_rate = (1 + annual_rate) ** (1 / 12) - 1
     investment = principal
-    breakeven_month = None
     current_monthly_investment = monthly_investment
 
-    for month in range(1, periods + 1):
+    for month in range(1, total_months + 1):
         # Calculate the monthly gain
         monthly_gain = investment * monthly_rate
 
         # Check for breakeven
-        if monthly_gain >= current_monthly_investment and breakeven_month is None:
+        if monthly_gain >= current_monthly_investment:
             breakeven_month = month
-            break
+            breakeven_year = month // 12 + (1 if month % 12 else 0)
+            return breakeven_month, breakeven_year
 
         # Increment the monthly investment periodically
         if month % increment_periods == 0:
             current_monthly_investment += increment
 
         # Update investment value
-        investment += current_monthly_investment
-        investment += investment * (annual_rate / capitalization_periods)
+        investment += current_monthly_investment + monthly_gain
 
-    if breakeven_month:
-        breakeven_year = breakeven_month // 12
-        return breakeven_month, breakeven_year + 1 if breakeven_month % 12 == 0 else breakeven_year
+    return None, None  # No breakeven point within the given time frame
+
+def calculate_required_monthly_investment(target_amount, principal, annual_rate, years, capitalization_periods):
+    """
+    Calculate the required monthly investment to reach a target amount.
+    """
+    total_months = years * 12
+    monthly_rate = (1 + annual_rate) ** (1 / 12) - 1
+    future_value_factor = ((1 + monthly_rate) ** total_months)
+    required_monthly_investment = (target_amount - principal * future_value_factor) * monthly_rate / (future_value_factor - 1)
+    return required_monthly_investment
+
+def calculate_time_to_goal(target_amount, principal, annual_rate, monthly_investment, capitalization_periods):
+    """
+    Calculate the time required to reach a target amount given monthly investment.
+    """
+    monthly_rate = (1 + annual_rate) ** (1 / 12) - 1
+    if monthly_rate == 0:
+        total_months = (target_amount - principal) / monthly_investment
     else:
-        return None, None  # No breakeven point within the given time frame
+        # Solve for n in the future value of an annuity formula
+        numerator = np.log((monthly_investment + monthly_rate * principal) / (monthly_investment + monthly_rate * target_amount))
+        denominator = np.log(1 + monthly_rate)
+        total_months = -numerator / denominator
+    total_years = total_months / 12
+    return total_years
