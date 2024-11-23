@@ -6,10 +6,11 @@ from tools.data.data_saver import save_to_csv
 from tools.insights_generator import generate_insights
 from tools.compound_interest_calculator import (
     basic_compound_interest,
+    find_breakeven_point_incremental,
     monthly_investing_compound_interest,
     incremental_monthly_investing,
-    abbreviate_number,
-    plot_interactive_chart
+    plot_interactive_chart,
+    plot_monthly_investments_and_gains 
 )
 
 # Streamlit configuration
@@ -100,12 +101,29 @@ with tab2:
         monthly_investment = st.number_input("Monthly Investment Amount", min_value=0.0, step=10.0)
         increment = st.number_input("Incremental Amount", min_value=0.0, step=10.0)
         increment_periods = st.number_input("Increment Period (Months)", min_value=1, step=1)
+        
         if st.button("Calculate (Incremental)"):
             final_amount, total_investment, relation, yearly_data = incremental_monthly_investing(
+                principal, annual_rate, years, capitalization_periods, monthly_investment, increment, increment_periods
+            )
+            breakeven_month, breakeven_year = find_breakeven_point_incremental(
                 principal, annual_rate, years, capitalization_periods, monthly_investment, increment, increment_periods
             )
             st.write(f"Final Amount: ${final_amount:,.2f}")
             st.write(f"Total Investment (excluding initial): ${total_investment:,.2f}")
             st.write(f"Relation (Final Amount / Total Investment): {relation:.2f}")
-
+            if breakeven_month:
+                st.write(f"Breakeven Point: {breakeven_month} months (Year {breakeven_year})")
+            else:
+                st.write("No breakeven point reached within the selected timeframe.")
+            
+            # Plot the results
             plot_interactive_chart(yearly_data, "Incremental Monthly Investing Compound Interest Over Time", final_amount)
+            plot_monthly_investments_and_gains(
+                principal, 
+                annual_rate, 
+                years, 
+                monthly_investment, 
+                increment, 
+                increment_periods
+            )

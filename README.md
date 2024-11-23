@@ -30,7 +30,7 @@ The purpose of this project is to provide investors and financial analysts with 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/earnings-report-scraper.git
+   git clone https://github.com/JuanArano17/earnings-report-scraper.git
    cd earnings-report-scraper
    ```
 
